@@ -60,6 +60,8 @@ namespace DarkUI.Controls
 
         public Bitmap ExpandedIcon { get; set; }
 
+        public Color TextColor { get; set; } = Config.Colors.LightText;
+
         public bool Expanded
         {
             get { return _expanded; }

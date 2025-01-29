@@ -1249,7 +1249,7 @@ namespace DarkUI.Controls
             }
 
             // 4. Draw text
-            using (var b = new SolidBrush(Colors.LightText))
+            using (var b = new SolidBrush(node.TextColor))
             {
                 var stringFormat = new StringFormat
                 {
