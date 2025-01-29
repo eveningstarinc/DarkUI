@@ -22,6 +22,8 @@ namespace DarkUI.Docking
 
         #region Property Region
 
+        public bool CanClose { get; set; } = true;
+
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public new Padding Padding
@@ -76,6 +78,14 @@ namespace DarkUI.Docking
             };
         }
 
+        public override void Close()
+        {
+            if (CanClose == false)
+                return;
+
+            base.Close();
+        }
+
         #endregion
 
         #region Event Handler Region
@@ -91,7 +101,7 @@ namespace DarkUI.Docking
         {
             base.OnMouseMove(e);
 
-            if (_closeButtonRect.Contains(e.Location) || _closeButtonPressed)
+            if (CanClose && _closeButtonRect.Contains(e.Location) || _closeButtonPressed)
             {
                 if (!_closeButtonHot)
                 {
@@ -213,12 +223,15 @@ namespace DarkUI.Docking
             }
 
             // Close button
-            var img = _closeButtonHot ? DockIcons.tw_close_selected : DockIcons.tw_close;
+            if (CanClose)
+            {
+                var img = _closeButtonHot ? DockIcons.tw_close_selected : DockIcons.tw_close;
 
-            if (isActive)
-                img = _closeButtonHot ? DockIcons.tw_active_close_selected : DockIcons.tw_active_close;
+                if (isActive)
+                    img = _closeButtonHot ? DockIcons.tw_active_close_selected : DockIcons.tw_active_close;
 
-            g.DrawImageUnscaled(img, _closeButtonRect.Left, _closeButtonRect.Top);
+                g.DrawImageUnscaled(img, _closeButtonRect.Left, _closeButtonRect.Top);
+            }
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
