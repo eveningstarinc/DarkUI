@@ -588,12 +588,16 @@ namespace DarkUI.Docking
 
         private void DockPanel_ActiveContentChanged(object sender, DockContentEventArgs e)
         {
+            // HACK: I commented out the calls to .Focus() in here because it was
+            //       causing the focus to get moved around unintentionally when clicking on
+            //       elements. -HB
+
             if (!_contents.Contains(e.Content))
                 return;
 
             if (e.Content == VisibleContent)
             {
-                VisibleContent.Focus();
+                // VisibleContent.Focus();
                 return;
             }
 
@@ -602,7 +606,7 @@ namespace DarkUI.Docking
             foreach (var content in _contents)
                 content.Visible = content == VisibleContent;
 
-            VisibleContent.Focus();
+            // VisibleContent.Focus();
 
             EnsureVisible();
             Invalidate();
