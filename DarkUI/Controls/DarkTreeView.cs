@@ -141,6 +141,24 @@ namespace DarkUI.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IComparer<DarkTreeNode> TreeViewNodeSorter { get; set; }
 
+        bool _deferSelectionChanged = false;
+        internal bool DeferSelectionChangedEvent
+        {
+            get => _deferSelectionChanged;
+            set
+            {
+                _deferSelectionChanged = value;
+                if (value == false && SelectionChangeTriggered)
+                {
+                    SelectionChangeTriggered = false;
+
+                    if (SelectedNodesChanged != null)
+                        SelectedNodesChanged(this, null);
+                }
+            }
+        }
+        internal bool SelectionChangeTriggered { get; set; }
+
         #endregion
 
         #region Constructor Region
@@ -230,6 +248,8 @@ namespace DarkUI.Controls
 
         private void ChildNodes_ItemsRemoved(object sender, ObservableListModified<DarkTreeNode> e)
         {
+            DeferSelectionChangedEvent = true;
+
             foreach (var node in e.Items)
             {
                 if (SelectedNodes.Contains(node))
@@ -238,11 +258,19 @@ namespace DarkUI.Controls
                 UnhookNodeEvents(node);
             }
 
+            DeferSelectionChangedEvent = false;
+
             UpdateNodes();
         }
 
         private void SelectedNodes_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            if (DeferSelectionChangedEvent)
+            {
+                SelectionChangeTriggered = true;
+                return;
+            }
+
             if (SelectedNodesChanged != null)
                 SelectedNodesChanged(this, null);
         }
@@ -809,8 +837,12 @@ namespace DarkUI.Controls
 
         public void SelectNode(DarkTreeNode node)
         {
+            DeferSelectionChangedEvent = true;
+
             _selectedNodes.Clear();
             _selectedNodes.Add(node);
+
+            DeferSelectionChangedEvent = false;
 
             _anchoredNodeStart = node;
             _anchoredNodeEnd = node;
@@ -851,10 +883,14 @@ namespace DarkUI.Controls
 
         public void SelectNodes(List<DarkTreeNode> nodes, bool updateAnchors = true)
         {
+            DeferSelectionChangedEvent = true;
+
             _selectedNodes.Clear();
 
             foreach (var node in nodes)
                 _selectedNodes.Add(node);
+
+            DeferSelectionChangedEvent = false;
 
             if (updateAnchors && _selectedNodes.Count > 0)
             {
@@ -873,6 +909,8 @@ namespace DarkUI.Controls
 
         public void ToggleNode(DarkTreeNode node)
         {
+            DeferSelectionChangedEvent = true;
+
             if (_selectedNodes.Contains(node))
             {
                 _selectedNodes.Remove(node);
@@ -921,6 +959,8 @@ namespace DarkUI.Controls
                 _anchoredNodeStart = node;
                 _anchoredNodeEnd = node;
             }
+
+            DeferSelectionChangedEvent = false;
 
             Invalidate();
         }
@@ -1091,6 +1131,8 @@ namespace DarkUI.Controls
             if (ForceDropToParent(dropNode))
                 dropNode = dropNode.ParentNode;
 
+            DeferSelectionChangedEvent = true;
+
             if (CanMoveNodes(_dragNodes, dropNode, true))
             {
                 var cachedSelectedNodes = SelectedNodes.ToList();
@@ -1117,6 +1159,8 @@ namespace DarkUI.Controls
                 foreach (var node in cachedSelectedNodes)
                     _selectedNodes.Add(node);
             }
+
+            DeferSelectionChangedEvent = false;
 
             StopDrag();
             UpdateNodes();
